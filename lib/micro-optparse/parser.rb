@@ -39,7 +39,7 @@ class Parser
     end
   end
 
-  def process!(arguments = ARGV)
+  def process!(arguments = ARGV, *opts)
     @result = @default_values.clone # reset or new
     @optionparser ||= OptionParser.new do |p| # prepare only once
       @options.each do |o|
@@ -64,13 +64,18 @@ class Parser
       p.on_tail(short, "--version", "Print version") {puts @version ; exit} unless @version.nil?
     end
     @default_values = @result.clone # save default values to reset @result in subsequent calls
+    yield(p) if block_given? #add specific optionparser options
 
     begin
-      @optionparser.parse!(arguments)
+      if opts[:process] then
+        @optionparser.send(opts[:process],arguments)
+      else
+        @optionparser.parse!(arguments)
+      end
     rescue OptionParser::ParseError => e
       puts e.message ; exit(1)
     end
-    
+
     validate(@result) if self.respond_to?("validate")
     @result
   end
