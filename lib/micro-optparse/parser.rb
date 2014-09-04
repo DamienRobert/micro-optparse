@@ -39,9 +39,8 @@ class Parser
     end
   end
 
-  def process!(arguments = ARGV, *opts)
-    @result = @default_values.clone # reset or new
-    @optionparser ||= OptionParser.new do |p| # prepare only once
+  def construct
+    @optionparser = OptionParser.new do |p|
       @options.each do |o|
         @used_short << short = o[:settings][:no_short] ? nil : o[:settings][:short] || short_from(o[:name])
         @result[o[:name]] = o[:settings][:default] || false unless o[:settings][:optional] # set default
@@ -62,16 +61,16 @@ class Parser
       p.on_tail("-h", "--help", "Show this message") {puts p ; exit}
       short = @used_short.include?("v") ? "-V" : "-v"
       p.on_tail(short, "--version", "Print version") {puts @version ; exit} unless @version.nil?
+      yield(p) if block_given? #add specific optionparser options
     end
     @default_values = @result.clone # save default values to reset @result in subsequent calls
-    yield(p) if block_given? #add specific optionparser options
+  end
 
+  def process!(arguments = ARGV, action: :'parse!')
+    @result = @default_values.clone # reset or new
+    @optionparser || construct
     begin
-      if opts[:process] then
-        @optionparser.send(opts[:process],arguments)
-      else
-        @optionparser.parse!(arguments)
-      end
+      @optionparser.send(action,arguments)
     rescue OptionParser::ParseError => e
       puts e.message ; exit(1)
     end
