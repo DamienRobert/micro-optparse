@@ -1,7 +1,7 @@
-&nano;-optparse
+Nano-optparse
 ===============
 
-Nano optparse is a mini-fork of &micro;-optparse that gives more control on
+Nano-optparse is a mini-fork of &micro;-optparse that gives more control on
 the underlying OptionParser.
 
 &micro;-optparse
