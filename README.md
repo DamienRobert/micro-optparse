@@ -4,6 +4,12 @@ Nano-optparse
 Nano-optparse is a mini-fork of &micro;-optparse that gives more control on
 the underlying OptionParser.
 
+## Copyright
+
+Copyright © 2014 Damien Robert (Apply only to the diff with micro-optparse)
+
+MIT License. See {file:MIT-LICENSE.txt} for details.
+
 &micro;-optparse
 ==========
 
