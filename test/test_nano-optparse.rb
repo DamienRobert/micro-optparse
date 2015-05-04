@@ -1,10 +1,10 @@
 require 'helper'
-require 'nano/optparse'
+require 'nano-optparse'
 
-class TestNano::Optparse < Minitest::Test
+class TestNanoOptparse < Minitest::Test
 
   def test_version
-    version = Nano::Optparse.const_get('VERSION')
+    version = NanoOptparse.const_get('VERSION')
 
     assert(!version.empty?, 'should have a VERSION constant')
   end

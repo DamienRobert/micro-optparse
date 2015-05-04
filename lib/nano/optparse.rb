@@ -1,1 +1,0 @@
-require 'nano/optparse/version'

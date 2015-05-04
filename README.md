@@ -7,15 +7,7 @@
 
 ## Description
 
-TODO: Description
-
-## Features
-
-## Examples
-
-    require 'nano/optparse'
-
-## Requirements
+Nano-Optparse is a small optparse wrapper heavily inspired by micro-optparse.
 
 ## Install
 

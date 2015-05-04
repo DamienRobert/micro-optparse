@@ -9,9 +9,8 @@ Gem::Specification.new do |gem|
   gem.version = gemspec.fetch('version') do
                   lib_dir = File.join(File.dirname(__FILE__),'lib')
                   $LOAD_PATH << lib_dir unless $LOAD_PATH.include?(lib_dir)
-
-                  require 'nano/optparse/version'
-                  Nano::Optparse::VERSION
+                  require 'nano-optparse/version'
+                  NanoOptparse::VERSION
                 end
 
   gem.summary     = gemspec['summary']

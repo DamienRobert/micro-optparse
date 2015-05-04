@@ -1,6 +1,6 @@
 name: nano-optparse
-summary: "TODO: Summary"
-description: "TODO: Description"
+summary: "Mini optparse wrapper"
+description: "nano-optparse is a small optparse wrapper heavily inspired by micro-optparse"
 license: MIT
 authors: Damien Robert
 email: Damien.Olivier.Robert+gems@gmail.com
