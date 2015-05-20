@@ -3,25 +3,17 @@ require 'delegate'
 require 'optparse'
 
 class NanoParser < DelegateClass(OptionParser)
-	attr_accessor :banner, :version
 	def initialize(**default_settings)
 		@default_settings=default_settings
 		@options = {}
 		@used_short = []
-		init_optparse
+		@optionparser = OptionParser.new
 		yield self if block_given?
 		super(@optionparser)
 	end
 
-	def init_optparse
-		@optionparser = OptionParser.new do |p|
-			p.banner = @banner unless @banner.nil?
-			p.on_tail("-h", "--help", "Show this message") {puts p ; exit}
-			p.on_tail("--version", "Print version") {puts @version ; exit}
-		end
-	end
-
-	def default_result
+	def init_result
+		@result={}
 		@options.each do |k,v|
 			@result[k]=v[:default] if v.key?(:default)
 		end
@@ -40,7 +32,7 @@ class NanoParser < DelegateClass(OptionParser)
 		exit exit_code
 	end
 
-	def opt(name, desc=nil, **settings)
+	def opt(name, desc=nil, on: :on, **settings)
 		name=name.to_sym
 		settings = @default_settings.clone.merge(settings).merge({desc: desc})
 		settings[:optname] ||= name.to_s.gsub("_", "-")
@@ -50,19 +42,21 @@ class NanoParser < DelegateClass(OptionParser)
 		@used_short << settings[:short]
 		args = [desc]
 		args << "-" + settings[:short] if settings[:short]
-		if [TrueClass, FalseClass, NilClass].include?(klass) # boolean switch
+		if [TrueClass, FalseClass, NilClass].include?(settings[:class]) # boolean switch
 			args << "--[no-]" + optname
-		else # argument with parameter, add class for typecheck
+		else
 			args << "--" + optname + " " + settings[:default].to_s
-			args << klass if klass
+			args << settings[:class] if settings[:class]
 		end
-		@optionparser.on(*args) do |x|
+		args+=settings[:extra]||[]
+		args=settings[:custom] if settings[:custom]
+		@optionparser.send(on,*args) do |x|
 			@result[name] = x
 			yield(x) if block_given? #add specific optionparser options
 		end
 	end
 
-	def validate(result) # remove this method if you want fewer lines of code and don't need validations
+	def validate(result)
 		result.each_pair do |key, value|
 			o = @options[key]
 			case o.check
@@ -77,8 +71,9 @@ class NanoParser < DelegateClass(OptionParser)
 	end
 
 	def process(arguments = ARGV, action: :'parse!')
+		arguments=arguments.clone
 		begin
-			default_result
+			init_result
 			@optionparser.send(action,arguments)
 		rescue OptionParser::ParseError => e
 			error e.message
