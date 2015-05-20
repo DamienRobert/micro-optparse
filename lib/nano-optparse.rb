@@ -35,20 +35,20 @@ class NanoParser < DelegateClass(OptionParser)
 		return name.to_s.chars.first
 	end
 
-	def error(msg)
+	def error(msg, exit_code: 1)
 		warn msg
-		exit 1
+		exit exit_code
 	end
 
 	def opt(name, desc=nil, **settings)
 		name=name.to_sym
 		settings = @default_settings.clone.merge(settings).merge({desc: desc})
 		settings[:optname] ||= name.to_s.gsub("_", "-")
-		@used_short << (settings[:short]||=short_from(name)) unless settings[:no_short]
+		settings[:short]||=short_from(name) if settings[:auto_short]
+		settings[:class] ||= settings[:default].class == Fixnum ? Integer : settings[:default].class if settings[:auto_class]
 		@options[name]=settings
-		@result[name] = settings[:default] || false unless settings[:optional] # set default
-		klass = settings[:class] || (settings[:default].class == Fixnum ? Integer : settings[:default].class)
-		args = [description]
+		@used_short << settings[:short]
+		args = [desc]
 		args << "-" + settings[:short] if settings[:short]
 		if [TrueClass, FalseClass, NilClass].include?(klass) # boolean switch
 			args << "--[no-]" + optname
@@ -76,12 +76,12 @@ class NanoParser < DelegateClass(OptionParser)
 		end
 	end
 
-	def process!(arguments = ARGV, action: :'parse!')
+	def process(arguments = ARGV, action: :'parse!')
 		begin
 			default_result
 			@optionparser.send(action,arguments)
 		rescue OptionParser::ParseError => e
-			error e.message ; exit(1)
+			error e.message
 		end
 		validate(@result)
 		@result, arguments
