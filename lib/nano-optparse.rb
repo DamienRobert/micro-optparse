@@ -1,15 +1,16 @@
 require 'nano-optparse/version'
+require 'delegate'
 require 'optparse'
 
-class NanoParser
+class NanoParser < DelegateClass(OptionParser)
 	attr_accessor :banner, :version
-	def initialize(**default_opts)
-		@default_opts=default_opts
+	def initialize(**default_settings)
+		@default_settings=default_settings
 		@options = {}
-		@default_values = {}
 		@used_short = []
 		init_optparse
 		yield self if block_given?
+		super(@optionparser)
 	end
 
 	def init_optparse
@@ -17,6 +18,12 @@ class NanoParser
 			p.banner = @banner unless @banner.nil?
 			p.on_tail("-h", "--help", "Show this message") {puts p ; exit}
 			p.on_tail("--version", "Print version") {puts @version ; exit}
+		end
+	end
+
+	def default_result
+		@options.each do |k,v|
+			@result[k]=v[:default] if v.key?(:default)
 		end
 	end
 
@@ -33,22 +40,24 @@ class NanoParser
 		exit 1
 	end
 
-	def opt(name, desc=nil, **opts)
-		opts = @default_opt.clone.merge(opts)
-		@options[name]=opts.merge({desc: desc})
-		@used_short << short = opts[:no_short] ? nil : opts[:short] || short_from(name)
-		@result[name] = opts[:default] || false unless opts[:optional] # set default
-		optname = name.to_s.gsub("_", "-")
-		klass = opts[:default].class == Fixnum ? Integer : opts[:default].class
+	def opt(name, desc=nil, **settings)
+		name=name.to_sym
+		settings = @default_settings.clone.merge(settings).merge({desc: desc})
+		settings[:optname] ||= name.to_s.gsub("_", "-")
+		@used_short << (settings[:short]||=short_from(name)) unless settings[:no_short]
+		@options[name]=settings
+		@result[name] = settings[:default] || false unless settings[:optional] # set default
+		klass = settings[:class] || (settings[:default].class == Fixnum ? Integer : settings[:default].class)
 		args = [description]
-		args << "-" + short if short
+		args << "-" + settings[:short] if settings[:short]
 		if [TrueClass, FalseClass, NilClass].include?(klass) # boolean switch
 			args << "--[no-]" + optname
 		else # argument with parameter, add class for typecheck
-			args << "--" + optname + " " + opts[:default].to_s << klass
+			args << "--" + optname + " " + settings[:default].to_s
+			args << klass if klass
 		end
 		@optionparser.on(*args) do |x|
-			@result[o[:name]] = x}
+			@result[name] = x
 			yield(x) if block_given? #add specific optionparser options
 		end
 	end
@@ -69,11 +78,12 @@ class NanoParser
 
 	def process!(arguments = ARGV, action: :'parse!')
 		begin
+			default_result
 			@optionparser.send(action,arguments)
 		rescue OptionParser::ParseError => e
 			error e.message ; exit(1)
 		end
 		validate(@result)
-		@result
+		@result, arguments
 	end
 end
