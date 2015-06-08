@@ -35,19 +35,34 @@ class NanoParser < DelegateClass(OptionParser)
 	def opt(name, desc=nil, on: :on, **settings)
 		name=name.to_sym
 		settings = @default_settings.clone.merge(settings).merge({desc: desc})
-		settings[:optname] ||= name.to_s.gsub("_", "-")
+		settings[:long] ||= name.to_s.gsub("_", "-")
 		settings[:short]||=short_from(name) if settings[:auto_short]
 		settings[:class] ||= settings[:default].class == Fixnum ? Integer : settings[:default].class if settings[:auto_class]
+		settings[:argname]||=name
 		@options[name]=settings
 		@used_short << settings[:short]
 		args = [desc]
 		args << "-" + settings[:short] if settings[:short]
-		if [TrueClass, FalseClass, NilClass].include?(settings[:class]) # boolean switch
-			args << "--[no-]" + optname
-		else
-			args << "--" + optname + " " + settings[:default].to_s
-			args << settings[:class] if settings[:class]
+		opttype=case settings[:type]
+			when :switch
+				"--[no-]" + settings[:long]
+			when :no-switch
+				"--no-" + settings[:long]
+			else
+				"--" + settings[:long]
+			end
+		case settings[:arg]
+		when :required
+			opttype+="=#{settings[:argname]}"
+		when :optional
+			opttype+="=[#{settings[:argname]}]"
+		when :placed
+			opttype+=" [#{settings[:argname]}]"
+		when :none
+			#do nothing
 		end
+		args<<opttype
+		args << settings[:class] if settings[:class]
 		args+=settings[:extra]||[]
 		args=settings[:custom] if settings[:custom]
 		@optionparser.send(on,*args) do |x|
