@@ -9,8 +9,9 @@ Gem::Specification.new do |gem|
   gem.version = gemspec.fetch('version') do
                   lib_dir = File.join(File.dirname(__FILE__),'lib')
                   $LOAD_PATH << lib_dir unless $LOAD_PATH.include?(lib_dir)
-                  require 'nano-optparse/version'
-                  NanoOptparse::VERSION
+
+                  require 'nano/optparse/version'
+                  Nano::Optparse::VERSION
                 end
 
   gem.summary     = gemspec['summary']
@@ -23,6 +24,16 @@ Gem::Specification.new do |gem|
   glob = lambda { |patterns| gem.files & Dir[*patterns] }
 
   gem.files = `git ls-files`.split($/)
+
+  `git submodule --quiet foreach --recursive pwd`.split($/).each do |submodule|
+    submodule.sub!("#{Dir.pwd}/",'')
+
+    Dir.chdir(submodule) do
+      `git ls-files`.split($/).map do |subpath|
+        gem.files << File.join(submodule,subpath)
+      end
+    end
+  end
   gem.files = glob[gemspec['files']] if gemspec['files']
 
   gem.executables = gemspec.fetch('executables') do
@@ -37,7 +48,7 @@ Gem::Specification.new do |gem|
     %w[ext lib].select { |dir| File.directory?(dir) }
   })
 
-  gem.requirements              = gemspec['requirements']
+  gem.requirements              = Array(gemspec['requirements'])
   gem.required_ruby_version     = gemspec['required_ruby_version']
   gem.required_rubygems_version = gemspec['required_rubygems_version']
   gem.post_install_message      = gemspec['post_install_message']
@@ -55,4 +66,6 @@ Gem::Specification.new do |gem|
       gem.add_development_dependency(name,split[versions])
     end
   end
+
+  gem.metadata['yard.run']='yri'
 end
