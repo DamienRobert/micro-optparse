@@ -94,6 +94,6 @@ class NanoParser < DelegateClass(OptionParser)
 			error e.message
 		end
 		validate(@result)
-		@result, arguments
+		return @result, arguments
 	end
 end
