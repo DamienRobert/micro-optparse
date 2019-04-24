@@ -1,8 +1,9 @@
-require 'nano-optparse/version'
 require 'delegate'
 require 'optparse'
 
 class NanoParser < DelegateClass(OptionParser)
+	require 'nano-optparse/version'
+
 	def initialize(**default_settings)
 		@default_settings=default_settings
 		@options = {}

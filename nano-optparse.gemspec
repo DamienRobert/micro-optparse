@@ -10,8 +10,8 @@ Gem::Specification.new do |gem|
                   lib_dir = File.join(File.dirname(__FILE__),'lib')
                   $LOAD_PATH << lib_dir unless $LOAD_PATH.include?(lib_dir)
 
-                  require 'nano/optparse/version'
-                  Nano::Optparse::VERSION
+                  require 'nano-optparse/version'
+                  NanoParser::VERSION
                 end
 
   gem.summary     = gemspec['summary']
@@ -68,4 +68,6 @@ Gem::Specification.new do |gem|
   end
 
   gem.metadata['yard.run']='yri'
+  gem.metadata['project_name']='NanoParser'
+  gem.metadata['require_file']='nano-optparse'
 end
